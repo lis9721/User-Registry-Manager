@@ -1,148 +1,153 @@
-"""
-service.py — Lógica de negocio (CRUD)
-Operaciones sobre la colección de usuarios en memoria + persistencia.
-"""
+import json
+import os
 
-import uuid
-from file import load_records, save_records
-from validate import validate_user, format_user_display
+ARCHIVO = "data.json"
 
+# UTILIDADES
 
-# ── Helpers internos ──────────────────────────────────────────────────────────
-
-def _get_all() -> list:
-    return load_records()
-
-
-def _save_all(users: list) -> None:
-    save_records(users)
-
-
-def _find_by_id(users: list, user_id: str) -> dict | None:
-    """Retorna el usuario que coincide con el ID, o None."""
-    matches = [u for u in users if u["id"] == user_id]
-    return matches[0] if matches else None
-
-
-# ── CRUD ─────────────────────────────────────────────────────────────────────
-
-def create_user(*args, **kwargs) -> dict:
-    """
-    Crea un nuevo usuario.
-    Acepta **kwargs para poder llamarlo desde Faker o desde el menú.
-    """
-    if kwargs:
-        # Llamada programática (ej. desde integration.py)
-        name  = kwargs.get("name", "")
-        email = kwargs.get("email", "")
-        age   = kwargs.get("age", 0)
-        role  = kwargs.get("role", "usuario")
-    else:
-        # Llamada interactiva desde el menú
-        name  = input("Nombre completo: ").strip()
-        email = input("Email: ").strip()
-        age   = input("Edad: ").strip()
-        role  = input("Rol (admin/editor/usuario): ").strip() or "usuario"
-
-    user = {
-        "id":    str(uuid.uuid4())[:8],
-        "name":  name,
-        "email": email,
-        "age":   int(age),
-        "role":  role,
-    }
-
-    errors = validate_user(user)
-    if errors:
-        for e in errors:
-            print(f"  ✗ {e}")
-        raise ValueError("Usuario inválido, no fue guardado.")
-
-    users = _get_all()
-    # Verificar email duplicado con set comprehension
-    existing_emails = {u["email"].lower() for u in users}
-    if user["email"].lower() in existing_emails:
-        raise ValueError(f"El email '{user['email']}' ya existe.")
-
-    users.append(user)
-    _save_all(users)
-    print(f"  ✓ Usuario '{user['name']}' creado con ID {user['id']}.")
-    return user
-
-
-def list_users() -> list:
-    """Lista todos los usuarios registrados."""
-    users = _get_all()
-    if not users:
-        print("  No hay usuarios registrados.")
+def cargar_datos():
+    if not os.path.exists(ARCHIVO):
+        return []
+    try:
+        with open(ARCHIVO, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        print("Error al leer el archivo.")
         return []
 
-    # List comprehension para formatear la salida
-    rows = [format_user_display(u) for u in users]
-    print(f"\n{'ID':<10} {'Nombre':<25} {'Email':<30} {'Edad':<6} {'Rol'}")
-    print("-" * 80)
-    for row in rows:
-        print(row)
-    print(f"\nTotal: {len(users)} usuario(s).")
-    return users
+def guardar_datos(datos):
+    try:
+        with open(ARCHIVO, "w", encoding="utf-8") as f:
+            json.dump(datos, f, indent=4)
+    except:
+        print("Error al guardar los datos.")
 
+# CREATE
 
-def update_user() -> None:
-    """Actualiza nombre, edad o rol de un usuario existente."""
-    users = _get_all()
-    if not users:
-        print("  No hay usuarios para actualizar.")
+def crear_producto():
+    datos = cargar_datos()
+    
+    try:
+        id_producto = input("ID: ").strip()
+        
+        # Validación: ID único
+        if any(p["id"] == id_producto for p in datos):
+            print("❌ Error: El ID ya existe.")
+            return
+        
+        nombre = input("Nombre: ").strip()
+        precio = float(input("Precio: "))
+        cantidad = int(input("Cantidad: "))
+
+        producto = {
+            "id": id_producto,
+            "nombre": nombre,
+            "precio": precio,
+            "cantidad": cantidad
+        }
+
+        datos.append(producto)
+        guardar_datos(datos)
+        print("✅ Producto creado correctamente.")
+
+    except ValueError:
+        print("❌ Error: Precio o cantidad inválidos.")
+
+# READ
+
+def listar_productos():
+    datos = cargar_datos()
+    
+    if not datos:
+        print("⚠️ No hay productos.")
         return
+    
+    # Uso de lambda para ordenar por nombre
+    datos_ordenados = sorted(datos, key=lambda x: x["nombre"])
 
-    user_id = input("ID del usuario a actualizar: ").strip()
-    user = _find_by_id(users, user_id)
-    if not user:
-        print(f"  No se encontró usuario con ID '{user_id}'.")
-        return
+    for p in datos_ordenados:
+        print(f'ID: {p["id"]} | Nombre: {p["nombre"]} | Precio: {p["precio"]} | Cantidad: {p["cantidad"]}')
 
-    print(f"  Editando: {user['name']} | {user['email']}")
-    print("  (Deja en blanco para no cambiar el campo)")
+def buscar_producto():
+    datos = cargar_datos()
+    termino = input("Buscar por nombre: ").lower()
 
-    new_name  = input(f"  Nuevo nombre [{user['name']}]: ").strip()
-    new_age   = input(f"  Nueva edad  [{user['age']}]: ").strip()
-    new_role  = input(f"  Nuevo rol   [{user['role']}]: ").strip()
+    # List comprehension para filtrar
+    resultados = [p for p in datos if termino in p["nombre"].lower()]
 
-    if new_name:
-        user["name"] = new_name
-    if new_age:
-        user["age"] = int(new_age)
-    if new_role:
-        user["role"] = new_role
+    if resultados:
+        for p in resultados:
+            print(p)
+    else:
+        print("❌ No se encontraron resultados.")
 
-    errors = validate_user(user)
-    if errors:
-        for e in errors:
-            print(f"  ✗ {e}")
-        raise ValueError("Datos inválidos, no se guardaron los cambios.")
-
-    _save_all(users)
-    print(f"  ✓ Usuario '{user['name']}' actualizado correctamente.")
+# UPDATE
 
 
-def delete_user() -> None:
-    """Elimina un usuario por ID."""
-    users = _get_all()
-    if not users:
-        print("  No hay usuarios para eliminar.")
-        return
+def actualizar_producto():
+    datos = cargar_datos()
+    id_producto = input("ID a actualizar: ")
 
-    user_id = input("ID del usuario a eliminar: ").strip()
-    user = _find_by_id(users, user_id)
-    if not user:
-        print(f"  No se encontró usuario con ID '{user_id}'.")
-        return
+    for p in datos:
+        if p["id"] == id_producto:
+            try:
+                p["nombre"] = input("Nuevo nombre: ")
+                p["precio"] = float(input("Nuevo precio: "))
+                p["cantidad"] = int(input("Nueva cantidad: "))
+                
+                guardar_datos(datos)
+                print("✅ Producto actualizado.")
+                return
+            except ValueError:
+                print("❌ Error: Datos inválidos.")
+                return
 
-    confirm = input(f"  ¿Eliminar a '{user['name']}'? (s/n): ").strip().lower()
-    if confirm != "s":
-        print("  Operación cancelada.")
-        return
+    print("❌ Error: ID no encontrado.")
 
-    # Lambda para filtrar sin el usuario eliminado
-    updated = list(filter(lambda u: u["id"] != user_id, users))
-    _save_all(updated)
-    print(f"  ✓ Usuario '{user['name']}' eliminado.")
+# DELETE
+
+def eliminar_producto():
+    datos = cargar_datos()
+    id_producto = input("ID a eliminar: ")
+
+    # List comprehension para eliminar
+    nuevos_datos = [p for p in datos if p["id"] != id_producto]
+
+    if len(nuevos_datos) == len(datos):
+        print("❌ Error: ID no encontrado.")
+    else:
+        guardar_datos(nuevos_datos)
+        print("✅ Producto eliminado.")
+
+# MENÚ
+
+def menu():
+    while True:
+        print("\n--- CRUD PRODUCTOS ---")
+        print("1. Crear")
+        print("2. Listar")
+        print("3. Buscar")
+        print("4. Actualizar")
+        print("5. Eliminar")
+        print("6. Salir")
+
+        opcion = input("Seleccione: ")
+
+        if opcion == "1":
+            crear_producto()
+        elif opcion == "2":
+            listar_productos()
+        elif opcion == "3":
+            buscar_producto()
+        elif opcion == "4":
+            actualizar_producto()
+        elif opcion == "5":
+            eliminar_producto()
+        elif opcion == "6":
+            print("Saliendo...")
+            break
+        else:
+            print("❌ Opción inválida.")
+
+if __name__ == "__main__":
+    menu()
