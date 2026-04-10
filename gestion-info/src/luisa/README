@@ -1,0 +1,54 @@
+# 🛒 MiniMarket — Módulo 5
+
+## 📌 Descripción
+
+Aplicación en Python que genera registros de ventas y los guarda en un archivo JSON usando datos falsos.
+
+---
+
+## ⚙️ Instalación
+
+```bash
+pip install faker
+```
+
+---
+
+## ▶️ Ejecución
+
+```bash
+python main.py
+```
+
+---
+
+## 🖥️ Uso
+
+Selecciona en el menú:
+
+```
+1. Generar 10 registros falsos
+2. Salir
+```
+
+---
+
+## 💾 Resultado
+
+Los datos se guardan automáticamente en `ventas.json`.
+
+---
+
+## 🧠 Tecnologías
+
+* Python
+* faker (librería externa)
+* JSON
+
+---
+
+## ✅ Funcionalidades
+
+* Generación automática de datos
+* Uso de funciones avanzadas (`**kwargs`)
+* Guardado en archivo JSON
