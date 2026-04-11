@@ -1,0 +1,39 @@
+# Proyecto CRUD de Usuarios
+
+## Descripción
+
+Este proyecto es un CRUD básico hecho en Python. Permite crear, ver, actualizar y eliminar usuarios. También guarda la información en un archivo JSON.
+
+---
+
+## Cómo ejecutar
+
+En la terminal:
+
+python main.py
+
+---
+
+## Cómo ejecutar pruebas
+
+pytest
+
+---
+
+## Estructura
+
+* main.py → menú
+* service.py → lógica
+* storage.py → guardar datos
+* utils.py → validaciones
+* tests/ → pruebas
+
+---
+
+## Notas
+
+* Se usaron buenas prácticas como separar el código
+* Tiene manejo de errores
+* Incluye pruebas con pytest
+
+---
