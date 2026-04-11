@@ -9,19 +9,36 @@ Permite registrar, consultar, actualizar y eliminar usuarios de una organizació
 ## ✒ Estructura del proyecto
 
 ```
-gestion-info/
+User-Registry-Manager/
+│
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
+│
 ├── data/
-│   └── records.json          # Base de datos local (JSON)
+│   └── users.json              # base de datos de usuarios
+│
 └── src/
-    ├── main.py               # Punto de entrada
-    ├── menu.py               # Interfaz de consola
-    ├── service.py            # Lógica CRUD
-    ├── file.py               # Persistencia JSON
-    ├── validate.py           # Validaciones y helpers
-    └── integration.py        # Integración con Faker
+    ├── main.py                 # punto de entrada
+    │
+    ├── ui/
+    │   └── menu.py             # interfaz (menú consola)
+    │
+    ├── core/
+    │   ├── service.py          # lógica CRUD usuarios
+    │   ├── file_manager.py     # manejo JSON
+    │   └── validators.py       # validaciones
+    │
+    ├── models/
+    │   └── user.py             # estructura del usuario
+    │
+    ├── utils/
+    │   └── helpers.py          # funciones auxiliares
+    │
+    ├── integrations/
+    │   └── faker_data.py       # generación de datos fake
+    │
+    └── __pycache__/            # NO subir
 ```
 
 ## ⚙️ Requisitos
